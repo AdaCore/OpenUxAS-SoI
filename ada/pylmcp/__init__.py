@@ -1,10 +1,11 @@
 import json
-import re
 from pylmcp.model import LMCP_DB
 from pylmcp.model.object_class import ObjectClass
 
+
 class InvalidObjectClass(Exception):
     pass
+
 
 class Object(object):
     """A LMCP Object."""
@@ -55,11 +56,32 @@ class Object(object):
                 if f.name not in kwargs:
                     self.data[f.name] = f.random_value()
 
+    def __eq__(self, other):
+        if len(self.data) != len(other.data):
+            return False
+        for k, v in self.data.items():
+            if not (k in map(lambda f: f.name,  other.attributes)):
+                return False
+
+            if isinstance(v, list):
+                for i in range(len(v)):
+                    if not v[i] == other[k][i]:
+                        return False
+            elif isinstance(v, Object):
+                if not v == other[k]:
+                    return False
+            elif v != other[k]:
+                return False
+        return True
+
     def __getattr__(self, name):
         try:
             return self.data[name]
         except KeyError as e:
             raise AttributeError(e)
+
+    def __neq__(self, other):
+        return not self == other
 
     def __setattr__(self, name, value):
         if name in ('object_class', 'data'):
