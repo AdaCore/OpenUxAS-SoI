@@ -1,29 +1,39 @@
-dist: trusty
+# Global variables
+language: python
 
-matrix:
-  include:
-    - services: docker
-      os: linux
-      env: BUILD_FLAVOR=linux_docker
-      sudo: required
-    - os: linux
-      env: BUILD_FLAVOR=linux_native
-      sudo: false
-      addons:
-        apt:
-          sources:
-            - deadsnakes
-          packages:
-            - uuid-dev
-            - libgtest-dev
-            - ant
-            - oracle-java8-set-default
-            - python3.6
-    - os: osx
-      env: BUILD_FLAVOR=osx_native
-      sudo: false
+python:
+    - "3.7"
+env:
+  global:
+    - TOOLS_DIR=$HOME/build_tools
+    - INSTALL_DIR=$HOME/build_tools/install
+    - CMAKE_BUILD_PARALLEL_LEVEL=1
+os:
+  - linux
+dist:
+  - bionic
+git:
+  submodules: false
 
-language: cpp
+# Cache directory that allows us to not download GNAT GPL every time, speeding
+# up the process.
+cache:
+  directories:
+    - $HOME/build_tools
+
+before_install:
+  - sudo apt-get update
+  - sudo apt-get install -y cmake
+  - sudo apt-get install -y pkg-config
+  - sudo apt-get install -y uuid-dev
+
+install:
+  - export PATH=$INSTALL_DIR/bin:$PATH
+  - sh .travis-install.sh
 
 script:
-  - bash ci/travis.sh
+  # Build uxas
+  - $TOOLS_DIR/OpenUxAS-bootstrap/anod-build uxas
+  - $TOOLS_DIR/OpenUxAS-bootstrap/anod-build uxas --qualifier=scenario=gcov
+  - eval `$TOOLS_DIR/OpenUxAS-bootstrap/anod-setenv uxas`
+  - testsuite/run-tests
