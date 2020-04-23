@@ -8,7 +8,7 @@ index 2be126e..42e2350 100644
  openuxas:
 -    vcs: git
 -    url: https://github.com/AdaCore/OpenUxAS.git
--    revision: ada
+-    revision: DAIDALUS_integration
 +    vcs: external
 +    url: $TRAVIS_BUILD_DIR
 +    revision: None
