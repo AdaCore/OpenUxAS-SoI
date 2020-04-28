@@ -1,0 +1,10 @@
+amase:
+  scenario: Scenario_WaterwaySearch.xml
+
+uxases:
+  - config: cfg_ada.xml
+    rundir: RUNDIR_ada
+    bin: demo
+
+  - config: cfg_cpp.xml
+    rundir: RUNDIR_cpp
