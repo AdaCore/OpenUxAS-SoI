@@ -5,5 +5,5 @@ uxases:
   - config: cfgDistributedCooperation_1000.xml
     rundir: RUNDIR_1000
 
-  - config: cfgDistributedCooperation_1000.xml
+  - config: cfgDistributedCooperation_2000.xml
     rundir: RUNDIR_2000
