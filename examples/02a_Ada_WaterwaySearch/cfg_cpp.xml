@@ -6,6 +6,7 @@
         <SubscribeToMessage MessageType="afrl.cmasi.VehicleActionCommand" />
     </Bridge>
 
+    <Service Type="Test_SimulationTime"/>
     <Service Type="StatusReportService" VehicleID="400" />
     <Service Type="TaskManagerService"/>
     <Service Type="RoutePlannerVisibilityService" TurnRadiusOffset_m="0.0" MinimumWaypointSeparation_m="50.0"/>
