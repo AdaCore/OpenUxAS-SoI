@@ -24,8 +24,8 @@ ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 AMASE_SRC_DIR = os.environ.get('AMASE_SOURCE_DIR')
 
 # Allow the environment specify how long we should wait after starting an
-# instance of OpenAMASE; default to 15 seconds.
-AMASE_DELAY = os.environ.get('AMASE_DELAY', 15)
+# instance of OpenAMASE; default to 0 seconds.
+AMASE_DELAY = os.environ.get('AMASE_DELAY', 0)
 
 DESCRIPTION = """
 Run OpenUxAS, OpenAMASE or both, using the configuration in the specified
@@ -53,6 +53,9 @@ AMASE_YAML_KEY = 'amase'
 
 # The key for specifying an OpenAMASE scenario file.
 SCENARIO_YAML_KEY = 'scenario'
+
+# The key for specying the delay after OpenAMASE opens.
+DELAY_YAML_KEY = 'delay'
 
 # The key for specifying a single OpenUxAS configuration.
 UXAS_YAML_KEY = 'uxas'
@@ -172,7 +175,7 @@ def list_examples(examples_dir):
         print(f"  {path}")
 
 
-def check_amase(loaded_yaml, example_dir):
+def check_amase(loaded_yaml, example_dir, args):
     """
     Check the OpenAMASE configuration in the YAML and return the scenario file
     found. If any errors are encountered, report them and immediately exit.
@@ -192,7 +195,14 @@ def check_amase(loaded_yaml, example_dir):
                    """)
         exit(1)
 
-    return scenario_file
+    if args.amase_delay is not None:
+        amase_delay = args.amase_delay
+    elif DELAY_YAML_KEY in loaded_yaml[AMASE_YAML_KEY].keys():
+        amase_delay = int(loaded_yaml[AMASE_YAML_KEY][DELAY_YAML_KEY])
+    else:
+        amase_delay = AMASE_DELAY
+
+    return (scenario_file, amase_delay)
 
 
 def run_amase(scenario_file, example_dir, amase_dir):
@@ -343,7 +353,7 @@ if __name__ == '__main__':
                     action="store_true",
                     help="list known examples")
 
-    ap.add_argument("--delay", dest="amase_delay", default=AMASE_DELAY,
+    ap.add_argument("--delay", dest="amase_delay", type=int,
                     help="number of seconds to wait after starting OpenAMASE" +
                          "before starting instances of OpenUxAS")
 
@@ -362,6 +372,8 @@ if __name__ == '__main__':
                     help="absolute path to the root of the examples")
 
     args = ap.parse_args()
+
+    print(args.amase_delay)
 
     # try:
     if args.list_examples:
@@ -397,19 +409,20 @@ if __name__ == '__main__':
         loaded_yaml = read_yaml(yaml_filename)
 
         amase_dir = resolve_amase_dir(args)
-        scenario_file = check_amase(loaded_yaml, example_dir)
+        (scenario_file, amase_delay) = check_amase(loaded_yaml, example_dir,
+                                                   args)
 
         uxas_configs = check_uxas(loaded_yaml, args)
 
         if scenario_file:
             amase_pid = run_amase(scenario_file, example_dir, amase_dir)
 
-            # Wait five seconds for AMASE to start and the user to press play.
-            print_wrap(f"""\
-                       Waiting for {args.amase_delay} seconds while AMASE
-                       starts; press 'Play' as soon as it does.
-                       """)
-            time.sleep(args.amase_delay)
+            if amase_delay > 0:
+                print_wrap(f"""\
+                           Waiting for {amase_delay} seconds while AMASE
+                           starts; press 'Play' as soon as it does.
+                           """)
+                time.sleep(amase_delay)
 
         popen = scenario_file is not None
         pids = run_uxas(uxas_configs, example_dir, popen)
