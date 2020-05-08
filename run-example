@@ -182,7 +182,7 @@ def check_amase(loaded_yaml, example_dir, args):
     """
 
     if AMASE_YAML_KEY not in loaded_yaml.keys():
-        return None
+        return (None, 0)
 
     if SCENARIO_YAML_KEY not in loaded_yaml[AMASE_YAML_KEY].keys():
         print("Error: OpenAMASE configuration must specify a scenario file.")
@@ -340,6 +340,30 @@ def run_one_uxas(uxas_config, example_dir, popen):
         return None
 
 
+def killall_uxases(popen, pids):
+    """
+    Gracefully quit any instances of OpenUxAS that we started
+    """
+
+    # We only worry about killing off UxAS instances if we Popened them
+    if popen and len(pids) != 0:
+        print("Shutting down forked OpenUxAS processes.")
+        for pid in pids:
+            pid.terminate()
+
+            # Seems as though we may need to wait a moment before
+            # polling.
+            time.sleep(0.1)
+            if pid.poll() is None:
+                pid.kill()
+
+                # Here especially I've seen "Unable to kill ..." when
+                # the process was actually killed, so we wait a moment.
+                time.sleep(0.1)
+                if pid.poll() is None:
+                    print(f"  Unable to kill PID {pid.pid}.")
+
+
 # Script processing.
 if __name__ == '__main__':
     ap = argparse.ArgumentParser(
@@ -373,83 +397,85 @@ if __name__ == '__main__':
 
     args = ap.parse_args()
 
-    print(args.amase_delay)
+    # For KeyboardInterrupt handling
+    popen = False
+    pids = list()
 
-    # try:
-    if args.list_examples:
-        examples_dir = resolve_examples_dir(args)
+    try:
+        if args.list_examples:
+            examples_dir = resolve_examples_dir(args)
 
-        print_wrap(f"""\
-                   In '{examples_dir}' the following examples are available:
-                   """)
-
-        list_examples(resolve_examples_dir(args))
-    else:
-        examples_dir = resolve_examples_dir(args)
-        example_dir = os.path.join(examples_dir, args.example)
-
-        if not os.path.exists(example_dir):
             print_wrap(f"""\
-                       Example '{args.example}' does not exist in
-                       '{examples_dir}'. Use the `--list` option for a list of
-                       available examples.
-                       """)
-            exit(1)
+                    In '{examples_dir}' the following examples are available:
+                    """)
 
-        yaml_filename = os.path.join(example_dir, CONFIG_FILE)
-        if not os.path.exists(yaml_filename):
-            print_wrap(f"""\
-                       Example '{args.example}' is not properly configured:
-                       there is no '{CONFIG_FILE}' in the example directory.
-                       Use the `--list` option for a list of available
-                       examples.
-                       """)
-            exit(1)
+            list_examples(resolve_examples_dir(args))
+        else:
+            examples_dir = resolve_examples_dir(args)
 
-        loaded_yaml = read_yaml(yaml_filename)
+            # Allow the user to specify a complete absolute or relative path to
+            # the example, rather than relying on the example search path. The
+            # advantage to the user here is that they can leverage autocomplete
+            if os.path.isabs(args.example):
+                example_dir = args.example
+            else:
+                example_dir = os.path.join(ROOT_DIR, args.example)
 
-        amase_dir = resolve_amase_dir(args)
-        (scenario_file, amase_delay) = check_amase(loaded_yaml, example_dir,
-                                                   args)
+            if not os.path.exists(example_dir):
+                example_dir = os.path.join(examples_dir, args.example)
 
-        uxas_configs = check_uxas(loaded_yaml, args)
+                if not os.path.exists(example_dir):
+                    print_wrap(f"""\
+                            Example '{args.example}' does not exist in
+                            '{examples_dir}'. Use the `--list` option for a
+                            list of available examples.
+                            """)
+                    exit(1)
 
-        if scenario_file:
-            amase_pid = run_amase(scenario_file, example_dir, amase_dir)
-
-            if amase_delay > 0:
+            yaml_filename = os.path.join(example_dir, CONFIG_FILE)
+            if not os.path.exists(yaml_filename):
                 print_wrap(f"""\
-                           Waiting for {amase_delay} seconds while AMASE
-                           starts; press 'Play' as soon as it does.
-                           """)
-                time.sleep(amase_delay)
+                        Example '{args.example}' is not properly configured:
+                        there is no '{CONFIG_FILE}' in the example directory.
+                        Use the `--list` option for a list of available
+                        examples.
+                        """)
+                exit(1)
 
-        popen = scenario_file is not None
-        pids = run_uxas(uxas_configs, example_dir, popen)
+            loaded_yaml = read_yaml(yaml_filename)
 
-        if scenario_file:
-            # Wait for the user to close AMASE
-            amase_pid.wait()
+            amase_dir = resolve_amase_dir(args)
+            (scenario_file, amase_delay) = check_amase(loaded_yaml,
+                                                       example_dir,
+                                                       args)
 
-        # We only worry about killing off UxAS instances if we Popened them
-        if popen and len(pids) != 0:
-            print("Shutting down forked OpenUxAS processes.")
-            for pid in pids:
-                pid.terminate()
+            uxas_configs = check_uxas(loaded_yaml, args)
 
-                # Seems as though we may need to wait a moment before polling.
-                time.sleep(0.1)
-                if pid.poll() is None:
-                    pid.kill()
+            if scenario_file:
+                amase_pid = run_amase(scenario_file, example_dir, amase_dir)
 
-                    # Here especially I've seen "Unable to kill ..." when the
-                    # process was actually killed, so we wait a moment.
-                    time.sleep(0.1)
-                    if pid.poll() is None:
-                        print(f"  Unable to kill PID {pid.pid}.")
+                if amase_delay > 0:
+                    print_wrap(f"""\
+                            Waiting for {amase_delay} seconds while AMASE
+                            starts; press 'Play' as soon as it does.
+                            """)
+                    time.sleep(amase_delay)
 
-    # except Exception as e:
-    #     print("Got an exception")
-    #     print(e, file=sys.stderr)
-    #     print(" ", file=sys.stderr)
-    #     ap.print_usage()
+            popen = scenario_file is not None
+            pids = run_uxas(uxas_configs, example_dir, popen)
+
+            if scenario_file:
+                # Wait for the user to close AMASE
+                amase_pid.wait()
+
+            killall_uxases(popen, pids)
+
+    except KeyboardInterrupt:
+        print(" ")
+        killall_uxases(popen, pids)
+
+    except Exception as e:
+        print("Got an exception")
+        print(e, file=sys.stderr)
+        print(" ", file=sys.stderr)
+        ap.print_usage()
