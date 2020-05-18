@@ -150,7 +150,7 @@ begin
    Ctrl_C_Handler;
 
    Get_Config_File_Name;
-   if XML_Cfg_File_Name.all /= "" then
+   if XML_Cfg_File_Name.all = "" then
       return;  -- we already displayed the help info in the procedure
    end if;   
 
