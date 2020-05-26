@@ -77,7 +77,7 @@ project AFRL_Ada_Dev is
    end Pretty_Printer;
 
    package Prove is
-      for Proof_Switches ("Ada") use ("--level=2");
+      for Proof_Switches ("Ada") use ("--level=4", "-j0", "--no-counterexample", "--report=all");
    end Prove;
 
 end AFRL_Ada_Dev;

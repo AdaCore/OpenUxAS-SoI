@@ -1,0 +1,46 @@
+with "xmlada";
+with "zmq.gpr";
+with "lmcp_generated_messages.gpr";
+
+project Travis_CI_Proof is
+
+   Files_To_Analyse :=
+     ("uxas-comms-lmcp_net_client-service-automation_request_validation-spark.ads"
+     , "route_aggregator.ads");
+
+
+   for Languages use ("Ada");
+
+   for Source_Dirs use
+     ("src/**");
+
+   for Object_Dir use "objs/";
+
+   package Builder is
+      for Default_Switches ("ada") use ("-j2");
+   end Builder;
+
+   package Compiler is
+      for Default_Switches ("ada") use
+        ("-O2",
+         "-gnatn",
+         "-gnatp",
+         "-fdata-sections",
+         "-ffunction-sections");
+   end Compiler;
+
+   package Pretty_Printer is
+      for Switches ("ada") use ("-nM", "--no-separate-loop-then", "-M120");
+   end Pretty_Printer;
+
+   package Prove is
+      for Proof_Switches ("Ada") use
+        ("--level=4",
+         "-j0",
+         "--no-counterexample",
+         "--report=all",
+         "-u") &
+         Files_To_Analyse;
+   end Prove;
+
+end Travis_CI_Proof;
