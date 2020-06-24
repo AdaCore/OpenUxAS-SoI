@@ -1,0 +1,33 @@
+on: [push, pull_request]
+name: Build UxAS
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-18.04, ubuntu-20.04]
+        component: [uxas]
+        qualifier: [dev, scenario=gcov]
+        python-version: [3.8]
+    runs-on: ${{ matrix.os }}
+    name: Build
+    steps:
+      - name: Check out OpenUxAS-bootstrap
+        uses: actions/checkout@v2
+        with:
+          repository: AdaCore/OpenUxAS-bootstrap
+          path: bootstrap
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install wheel zmq e3-core e3-testsuite
+      - name: Build with anod
+        run: bootstrap/anod build ${{ matrix.component }} --qualifier=${{ matrix.qualifier}}
+      - name: Set environment
+        run: eval "$( bootstrap/anod printenv ${{ matrix.component }} --qualifier=${{ matrix.qualifier }} )"
+      - name: Run tests
+        run: testsuite/run-tests
