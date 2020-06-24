@@ -1,48 +1,6 @@
 on: [push, pull_request]
 name: Build
 jobs:
-  dependencies:
-    name: Build Dependencies
-    strategy:
-      fail-fast: true
-      matrix:
-        os: [ubuntu-18.04, ubuntu-20.04]
-        python-version: [3.8]
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Check out OpenUxAS-bootstrap
-        uses: actions/checkout@v2
-        with:
-          repository: AdaCore/OpenUxAS-bootstrap
-          path: bootstrap
-
-      - name: Set up python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install anod dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install wheel zmq e3-core e3-testsuite
-
-      - name: Build uxas dependencies with anod
-        run: |
-          bootstrap/anod -v build serial
-          bootstrap/anod -v build pugixml
-          bootstrap/anod -v build sqlite
-          bootstrap/anod -v build lmcpgen
-          bootstrap/anod -v build zyre
-          SHELL=/bin/bash bootstrap/anod -v build boost
-
-      - name: Upload uxas dependencies
-        uses: actions/upload-artifact@v2
-        with:
-          name: ${{ matrix.os }}-${{ matrix.python-version }}-bootstrap
-          path: bootstrap
-
   build:
     name: Build UxAS
     needs: dependencies
@@ -57,10 +15,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Download uxas dependencies
-        uses: actions/download-artifacts@v2
+      - name: Check out OpenUxAS-bootstrap
+        uses: actions/checkout@v2
         with:
-          name: ${{ matrix.os }}-${{ matrix.python-version }}-bootstrap
+          repository: AdaCore/OpenUxAS-bootstrap
           path: bootstrap
 
       - name: Set up Python ${{ matrix.python-version }}
