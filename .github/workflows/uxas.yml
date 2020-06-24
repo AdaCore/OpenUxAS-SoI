@@ -1,7 +1,7 @@
 on: [push, pull_request]
 name: Build
 jobs:
-  deps:
+  dependencies:
     name: Build Dependencies
     strategy:
       fail-fast: true
@@ -35,7 +35,7 @@ jobs:
           bootstrap/anod -v build sqlite
           bootstrap/anod -v build lmcpgen
           bootstrap/anod -v build zyre
-          bootstrap/anod -v build boost
+          SHELL=/bin/bash bootstrap/anod -v build boost
 
       - name: Upload Dependencies
         uses: actions/upload-artifact@v2
@@ -45,6 +45,7 @@ jobs:
 
   build:
     name: Build UxAS
+    needs: dependencies
     strategy:
       fail-fast: false
       matrix:
