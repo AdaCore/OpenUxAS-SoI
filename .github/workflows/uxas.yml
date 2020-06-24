@@ -3,7 +3,6 @@ name: Build
 jobs:
   build:
     name: Build UxAS
-    needs: dependencies
     strategy:
       fail-fast: false
       matrix:
