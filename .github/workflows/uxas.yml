@@ -18,17 +18,17 @@ jobs:
           repository: AdaCore/OpenUxAS-bootstrap
           path: bootstrap
 
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install dependencies
+      - name: Install anod dependencies
         run: |
           python -m pip install --upgrade pip
           pip install wheel zmq e3-core e3-testsuite
 
-      - name: Build Dependencies
+      - name: Build uxas dependencies with anod
         run: |
           bootstrap/anod -v build serial
           bootstrap/anod -v build pugixml
@@ -37,7 +37,7 @@ jobs:
           bootstrap/anod -v build zyre
           SHELL=/bin/bash bootstrap/anod -v build boost
 
-      - name: Upload Dependencies
+      - name: Upload uxas dependencies
         uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.os }}-${{ matrix.python-version }}-bootstrap
@@ -57,11 +57,21 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Download Dependencies
+      - name: Download uxas dependencies
         uses: actions/download-artifacts@v2
         with:
           name: ${{ matrix.os }}-${{ matrix.python-version }}-bootstrap
           path: bootstrap
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install anod dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install wheel zmq e3-core e3-testsuite
 
       - name: Build with anod
         run: bootstrap/anod -v build ${{ matrix.component }} --qualifier=${{ matrix.qualifier}}
