@@ -25,8 +25,8 @@ jobs:
 
       - name: Patch bootstrap
         run: |
-          patch -d$HOME/bootstrap -p0 < $GITHUB_WORKSPACE/.github/bootstrap.patch
           envsubst < $GITHUB_WORKSPACE/.github/bootstrap.patch &> $GITHUB_WORKSPACE/.github/bootstrap.patch
+          patch -d$HOME/bootstrap -p0 < $GITHUB_WORKSPACE/.github/bootstrap.patch
           cat $HOME/bootstrap/specs/config/repositories.yaml
 
       - name: Build with anod
