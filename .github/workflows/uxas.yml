@@ -25,21 +25,30 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install anod dependencies
+      # - name: Install anod dependencies
+      #   run: |
+      #     python -m pip install --upgrade pip
+      #     pip install wheel 
+      #     pip install zmq e3-core e3-testsuite
+      #     sudo apt-get install -y uuid-dev
+
+      - name: Bootstrap anod
         run: |
-          python -m pip install --upgrade pip
-          pip install wheel zmq e3-core e3-testsuite
-          sudo apt install -y uuid-dev
+          bootstrap/install/install-anod-venv -vv -y
+
+      - name: Patch bootstrap
+        run: |
+          patch -d~/bootstrap -p0 < ~/.github/bootstrap.patch
+          cat ~/bootstrap/specs/config/repositories.yaml
 
       - name: Build with anod
-        run: SHELL=/bin/bash bootstrap/anod -v build ${{ matrix.component }} --qualifier=${{ matrix.qualifier}}
-      
-      - name: Set environment
         run: |
-          eval "$( bootstrap/anod -v printenv ${{ matrix.component }} --qualifier=${{ matrix.qualifier }} )"
-          echo $PATH
+          eval "$( ~/bootstrap/install/install-anod-venv --printenv )"
+          SHELL=/bin/bash bootstrap/anod -v build ${{ matrix.component }} --qualifier=${{ matrix.qualifier}}
       
       - name: Run tests
         run: |
+          eval "$( ~/bootstrap/install/install-anod-venv --printenv )"
+          eval "$( bootstrap/anod -v printenv ${{ matrix.component }} --qualifier=${{ matrix.qualifier }} )"
           echo $PATH
           testsuite/run-tests
