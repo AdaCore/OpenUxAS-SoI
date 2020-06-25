@@ -29,6 +29,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install wheel zmq e3-core e3-testsuite
+          sudo apt install -y uuid-dev
 
       - name: Build with anod
         run: SHELL=/bin/bash bootstrap/anod -v build ${{ matrix.component }} --qualifier=${{ matrix.qualifier}}
