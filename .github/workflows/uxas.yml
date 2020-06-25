@@ -31,7 +31,7 @@ jobs:
           pip install wheel zmq e3-core e3-testsuite
 
       - name: Build with anod
-        run: bootstrap/anod -v build ${{ matrix.component }} --qualifier=${{ matrix.qualifier}}
+        run: SHELL=/bin/bash bootstrap/anod -v build ${{ matrix.component }} --qualifier=${{ matrix.qualifier}}
       
       - name: Set environment
         run: eval "$( bootstrap/anod -v printenv ${{ matrix.component }} --qualifier=${{ matrix.qualifier }} )"
