@@ -18,7 +18,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: AdaCore/OpenUxAS-bootstrap
-          path: bootstrap
+          path: $HOME/bootstrap
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
@@ -34,21 +34,21 @@ jobs:
 
       - name: Bootstrap anod
         run: |
-          bootstrap/install/install-anod-venv -vv -y
+          $HOME/bootstrap/install/install-anod-venv -vv -y
 
       - name: Patch bootstrap
         run: |
-          patch -d~/bootstrap -p0 < ~/.github/bootstrap.patch
-          cat ~/bootstrap/specs/config/repositories.yaml
+          patch -d$HOME/bootstrap -p0 < $GITHUB_WORKSPACE/.github/bootstrap.patch
+          cat $HOME/bootstrap/specs/config/repositories.yaml
 
       - name: Build with anod
         run: |
-          eval "$( ~/bootstrap/install/install-anod-venv --printenv )"
-          SHELL=/bin/bash bootstrap/anod -v build ${{ matrix.component }} --qualifier=${{ matrix.qualifier}}
+          eval "$( $HOME/bootstrap/install/install-anod-venv --printenv )"
+          SHELL=/bin/bash $HOME/bootstrap/anod -v build ${{ matrix.component }} --qualifier=${{ matrix.qualifier}}
       
       - name: Run tests
         run: |
-          eval "$( ~/bootstrap/install/install-anod-venv --printenv )"
-          eval "$( bootstrap/anod -v printenv ${{ matrix.component }} --qualifier=${{ matrix.qualifier }} )"
+          eval "$( $HOME/bootstrap/install/install-anod-venv --printenv )"
+          eval "$( $HOME/bootstrap/anod -v printenv ${{ matrix.component }} --qualifier=${{ matrix.qualifier }} )"
           echo $PATH
-          testsuite/run-tests
+          $GITHUB_WORKSPACE/testsuite/run-tests

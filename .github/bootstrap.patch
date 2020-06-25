@@ -10,7 +10,7 @@ index 2be126e..42e2350 100644
 -    url: https://github.com/AdaCore/OpenUxAS.git
 -    revision: ada
 +    vcs: external
-+    url: /home/runner/work/OpenUxAS/OpenUxAS
++    url: $GITHUB_WORKSPACE
 +    revision: None
  amase:
      vcs: git
