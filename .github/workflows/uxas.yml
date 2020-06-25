@@ -21,7 +21,8 @@ jobs:
 
       - name: Bootstrap anod
         run: |
-          curl -L https://github.com/AdaCore/OpenUxAS-bootstrap/raw/master/install/bootstrap | bash -s -- --no-gnat
+          curl -L https://github.com/manthonyaiello/OpenUxAS-bootstrap/raw/master/util/bootstrap | BOOTSTRAP_FORK=manthonyaiello/OpenUxAS-bootstrap.git bash -s -- --no-gnat
+#      curl -L https://github.com/AdaCore/OpenUxAS-bootstrap/raw/master/install/bootstrap | bash -s -- --no-gnat
 
       - name: Patch bootstrap
         run: |
