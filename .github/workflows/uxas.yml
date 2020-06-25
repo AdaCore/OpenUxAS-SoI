@@ -34,7 +34,11 @@ jobs:
         run: SHELL=/bin/bash bootstrap/anod -v build ${{ matrix.component }} --qualifier=${{ matrix.qualifier}}
       
       - name: Set environment
-        run: eval "$( bootstrap/anod -v printenv ${{ matrix.component }} --qualifier=${{ matrix.qualifier }} )"
+        run: |
+          eval "$( bootstrap/anod -v printenv ${{ matrix.component }} --qualifier=${{ matrix.qualifier }} )"
+          echo $PATH
       
       - name: Run tests
-        run: testsuite/run-tests
+        run: |
+          echo $PATH
+          testsuite/run-tests
