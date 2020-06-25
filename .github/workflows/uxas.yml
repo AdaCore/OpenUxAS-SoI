@@ -11,6 +11,8 @@ jobs:
         qualifier: [dev, scenario=gcov]
         python-version: [3.8]
     runs-on: ${{ matrix.os }}
+    env:
+      VPYTHON: $HOME/bootstrap/vpython/bin/python
     steps:
       - uses: actions/checkout@v2
 
@@ -27,14 +29,13 @@ jobs:
         run: |
           envsubst < $GITHUB_WORKSPACE/.github/bootstrap.patch &> $GITHUB_WORKSPACE/.github/bootstrap.patch
           patch -d$HOME/bootstrap -p0 < $GITHUB_WORKSPACE/.github/bootstrap.patch
-          cat $HOME/bootstrap/specs/config/repositories.yaml
 
       - name: Build with anod
         run: |
-          SHELL=/bin/bash $HOME/bootstrap/vpython/bin/python $HOME/bootstrap/anod -v build ${{ matrix.component }} --qualifier=${{ matrix.qualifier}}
+          SHELL=/bin/bash $VPYTHON $HOME/bootstrap/anod -v build ${{ matrix.component }} --qualifier=${{ matrix.qualifier}}
       
       - name: Run tests
         run: |
-          eval "$( $HOME/bootstrap/vpython/bin/python $HOME/bootstrap/anod -v printenv ${{ matrix.component }} --qualifier=${{ matrix.qualifier }} )"
+          eval "$( $VPYTHON $HOME/bootstrap/anod -v printenv ${{ matrix.component }} --qualifier=${{ matrix.qualifier }} )"
           echo $PATH
-          $GITHUB_WORKSPACE/testsuite/run-tests
+          $VPYTHON $GITHUB_WORKSPACE/testsuite/run-tests
