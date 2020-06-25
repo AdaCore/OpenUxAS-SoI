@@ -7,7 +7,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-18.04, ubuntu-20.04]
-        component: [amase, uxas, uxas-ada]
+        component: [uxas-ada, uxas, amase]
         qualifier: [dev, scenario=gcov]
         python-version: [3.7, 3.8]
     runs-on: ${{ matrix.os }}
